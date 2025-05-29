@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import db from "./config/Database.js";
 import router from "./routes/Route.js";
 import "./model/Associations.js";
+import SequelizeStore from "connect-session-sequelize";
 
 dotenv.config();
 
@@ -18,14 +19,22 @@ app.use(cors({
 
 app.use(express.json());
 
+// Session
+const SequelizeSessionStore = SequelizeStore(session.Store);
+const store = new SequelizeSessionStore({ db });
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  store: store, // 👈 tambahkan ini
   cookie: {
     maxAge: 3600000, // 1 jam
   },
 }));
+
+// Sinkronisasi tabel session
+store.sync();
 
 app.use(router);
 
