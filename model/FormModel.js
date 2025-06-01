@@ -38,6 +38,10 @@ const Form = db.define("form", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  bukti_pengiriman: {
+  type: DataTypes.STRING, // URL atau path ke GCS
+  allowNull: true,
+},
    userId: {
   type: DataTypes.INTEGER,
   allowNull: false

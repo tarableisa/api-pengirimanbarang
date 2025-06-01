@@ -1,4 +1,14 @@
 steps:
+
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        mkdir -p config
+        gcloud secrets versions access latest \
+        --secret=backend-gcs-key > config/gcs-key.json
+
   - name: "gcr.io/cloud-builders/docker"
     args: ["build", "-t", "gcr.io/$PROJECT_ID/api-pengirimanbarang", "."]
 
@@ -8,26 +18,18 @@ steps:
   - name: "gcr.io/cloud-builders/gcloud"
     entrypoint: gcloud
     args:
-      - "run"
-      - "deploy"
-      - "api-pengirimanbarang"
-      - "--image"
-      - "gcr.io/$PROJECT_ID/api-pengirimanbarang"
-      - "--timeout"
-      - "1000s"
-      - "--port"
-      - "5000"
-      - "--region"
-      - "us-central1"
-      - "--allow-unauthenticated"
-      - "--set-env-vars"
-      - >
-        DB_HOST=34.55.111.115,
-        DB_USER=root,
-        DB_PASS=,
-        DB_NAME=pengiriman_db,
-        ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-        ENCRYPTION_IV=abcdefabcdefabcdefabcdefabcdefab
-
+      [
+        "run", "deploy", "api-pengirimanbarang",
+        "--image", "gcr.io/$PROJECT_ID/api-pengirimanbarang",
+        "--timeout", "1000s",
+        "--port", "5000",
+        "--region", "us-central1",
+        "--allow-unauthenticated",
+        "--set-env-vars",
+        "DB_HOST=34.55.111.115,DB_USER=root,DB_PASS=,DB_NAME=pengiriman_db,ENCRYPTION_KEY=$_ENCRYPTION_KEY,ENCRYPTION_IV=$_ENCRYPTION_IV",
+      ]
 options:
   logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _NIK_SECRET_KEY: "defaultSecretKeyIfAny"
+  _NIK_IV: "defaultIVIfAny"
