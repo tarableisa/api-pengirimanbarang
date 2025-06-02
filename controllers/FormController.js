@@ -84,6 +84,41 @@ export const getForms = async (req, res) => {
   }
 };
 
+// Get form by ID
+export const getFormById = async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ message: "Harus login" });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const form = await Form.findOne({
+      where: {
+        id,
+        userId: req.session.userId, // hanya milik user login
+      },
+    });
+
+    if (!form) {
+      return res.status(404).json({ message: "Form tidak ditemukan" });
+    }
+
+    const data = form.toJSON();
+    const decrypted = {
+      ...data,
+      phonenumberPengirim: decrypt(data.phonenumberPengirim),
+      phonenumberPenerima: decrypt(data.phonenumberPenerima),
+    };
+
+    res.json(decrypted);
+  } catch (err) {
+    console.error("GetFormById Error:", err);
+    res.status(500).json({ message: "Gagal ambil detail form" });
+  }
+};
+
+
 // ===== Fungsi baru: Update form =====
 export const updateForm = async (req, res) => {
   if (!req.session.userId) {
