@@ -16,6 +16,7 @@ export const uploadBukti = upload.single("bukti_pengiriman");
 // Create form (ini sudah ada)
 export const createForm = async (req, res) => {
   if (!req.session.userId) {
+    console.log("❌ [createForm] Tidak ada session userId");
     return res.status(401).json({ message: "Harus login" });
   }
 
@@ -26,12 +27,15 @@ export const createForm = async (req, res) => {
       ...formData
     } = req.body;
 
+    console.log("📥 [createForm] Data diterima:", req.body);
+
     const encryptedPhonePengirim = encrypt(phonenumberPengirim.toString());
     const encryptedPhonePenerima = encrypt(phonenumberPenerima.toString());
 
     let imageUrl = null;
 
     if (req.file) {
+      console.log("📸 [createForm] File terdeteksi:", req.file.originalname);
       const gcsFileName = `bukti/${uuidv4()}-${req.file.originalname}`;
       const file = bucket.file(gcsFileName);
 
@@ -42,22 +46,30 @@ export const createForm = async (req, res) => {
       });
 
       imageUrl = `https://storage.googleapis.com/${bucket.name}/${gcsFileName}`;
+      console.log("✅ [createForm] Upload GCS berhasil:", imageUrl);
+    } else {
+      console.log("⚠️ [createForm] Tidak ada file dikirim");
     }
 
-    const form = await Form.create({
+    const payload = {
       ...formData,
       phonenumberPengirim: encryptedPhonePengirim,
       phonenumberPenerima: encryptedPhonePenerima,
       bukti_pengiriman: imageUrl,
       userId: req.session.userId,
-    });
+    };
+
+    console.log("📝 [createForm] Payload yang dikirim ke DB:", payload);
+
+    const form = await Form.create(payload);
 
     res.json({ message: "Form berhasil disimpan", data: form });
   } catch (err) {
-    console.error("Form Error:", err);
-    res.status(500).json({ message: "Gagal simpan form" });
+    console.error("❌ [createForm] Error:", err);
+    res.status(500).json({ message: "Gagal simpan form", error: err.message });
   }
 };
+
 
 // Ambil data dan dekripsi (sudah ada)
 export const getForms = async (req, res) => {
