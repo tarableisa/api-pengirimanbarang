@@ -34,22 +34,21 @@ export const createForm = async (req, res) => {
 
     let imageUrl = null;
 
-    if (req.file) {
-      console.log("📸 [createForm] File terdeteksi:", req.file.originalname);
-      const gcsFileName = `bukti/${uuidv4()}-${req.file.originalname}`;
-      const file = bucket.file(gcsFileName);
+if (req.file) {
+  console.log("📸 [createForm] File terdeteksi:", req.file.originalname);
+  const gcsFileName = `bukti/${uuidv4()}-${req.file.originalname}`;
+  const file = bucket.file(gcsFileName);
 
-      await file.save(req.file.buffer, {
-        metadata: { contentType: req.file.mimetype },
-        resumable: false,
-        public: true,
-      });
+  await file.save(req.file.buffer, {
+    metadata: { contentType: req.file.mimetype },
+    resumable: false,
+  });
 
-      imageUrl = `https://storage.googleapis.com/${bucket.name}/${gcsFileName}`;
-      console.log("✅ [createForm] Upload GCS berhasil:", imageUrl);
-    } else {
-      console.log("⚠️ [createForm] Tidak ada file dikirim");
-    }
+  await file.makePublic();
+
+  imageUrl = `https://storage.googleapis.com/${bucket.name}/${gcsFileName}`;
+  console.log("✅ [createForm] Upload GCS berhasil:", imageUrl);
+}
 
     const payload = {
       ...formData,
@@ -170,11 +169,13 @@ export const updateForm = async (req, res) => {
     if (req.file) {
       const gcsFileName = `bukti/${uuidv4()}-${req.file.originalname}`;
       const file = bucket.file(gcsFileName);
-      await file.save(req.file.buffer, {
-        metadata: { contentType: req.file.mimetype },
-        resumable: false,
-        public: true,
-      });
+await file.save(req.file.buffer, {
+  metadata: { contentType: req.file.mimetype },
+  resumable: false,
+});
+
+await file.makePublic();
+
       updateData.bukti_pengiriman = `https://storage.googleapis.com/${bucket.name}/${gcsFileName}`;
       // (opsional) tidak menghapus file GCS lama, atau implementasi cleanup jika mau
     }
