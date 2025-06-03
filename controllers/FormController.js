@@ -44,8 +44,6 @@ if (req.file) {
     resumable: false,
   });
 
-  await file.makePublic();
-
   imageUrl = `https://storage.googleapis.com/${bucket.name}/${gcsFileName}`;
   console.log("✅ [createForm] Upload GCS berhasil:", imageUrl);
 }
@@ -173,8 +171,6 @@ await file.save(req.file.buffer, {
   metadata: { contentType: req.file.mimetype },
   resumable: false,
 });
-
-await file.makePublic();
 
       updateData.bukti_pengiriman = `https://storage.googleapis.com/${bucket.name}/${gcsFileName}`;
       // (opsional) tidak menghapus file GCS lama, atau implementasi cleanup jika mau
